@@ -27,15 +27,9 @@ calcSoilStockChangeFactors <- function(factor = "landuse") {
   if (factor %in% c("tillage", "input")) {
 
     subtype <- if (factor == "tillage") "SCF_MG2019" else "SCF_I2019"
-    raw <- readSource("IPCC", subtype = subtype, convert = FALSE)
-    # raw arrives as GLO x "climateclass.factor", reshape into climate x factor
-    values <- setNames(vapply(getNames(raw), function(n) as.numeric(raw[1, , n]), numeric(1)),
-                       getNames(raw))
-    classes <- sort(unique(sub("\\.[^.]*$", "", getNames(raw))))
-    factors <- sort(unique(sub(".*\\.", "", getNames(raw))))
-    out <- new.magpie(classes, NULL, names = factors, fill = 0)
-    out[, , ] <- matrix(values[outer(classes, factors, paste, sep = ".")],
-                        nrow = length(classes))
+    # The source table is already the factor table (climate class x management
+    # factor), so it is passed through unchanged; rounding happens in fullMAGPIE.
+    out <- readSource("IPCC", subtype = subtype, convert = FALSE)
     return(list(x = out,
                 unit = "1",
                 description = if (factor == "tillage")
@@ -45,42 +39,53 @@ calcSoilStockChangeFactors <- function(factor = "landuse") {
 
   } else if (factor == "fallow") {
 
-    raw <- readSource("IPCC", subtype = "SCF_LU2019", convert = FALSE)
-    # raw arrives as GLO x "climateclass.landusetype"
-    values <- setNames(vapply(getNames(raw), function(n) as.numeric(raw[1, , n]), numeric(1)),
-                       getNames(raw))
-    classes <- sort(unique(sub("\\.[^.]*$", "", getNames(raw))))
-    out <- new.magpie(classes, NULL, names = "fallow", fill = NA)
-    for (cl in classes) {
-      # assume bare fallow in dry regions (long-term cultivated value) and
-      # vegetated fallow in moist regions (set-aside value)
-      lu <- if (grepl("_dry$", cl)) "Long_term_cultivated" else "Set_aside_under20yrs"
-      out[cl, , "fallow"] <- values[paste(cl, lu, sep = ".")]
-    }
+    # Fallow land has no dedicated IPCC column, so its stock change factor is
+    # derived from the land-use (F_LU), tillage (F_MG) and input (F_I) factors.
+    lu  <- readSource("IPCC", subtype = "SCF_LU2019", convert = FALSE)  # F_LU
+    mg  <- readSource("IPCC", subtype = "SCF_MG2019", convert = FALSE)  # F_MG (tillage)
+    inp <- readSource("IPCC", subtype = "SCF_I2019", convert = FALSE)   # F_I  (input)
+
+    # Assumption for fallow management:
+    #   - dry regions   -> bare fallow: long-term cultivated cropland combined
+    #                      with full tillage and low input management
+    #   - moist regions -> vegetated fallow: the set-aside land-use factor
+    # (IPCC 2019, Table 5.5). The moisture regime is encoded in the class name.
+    dry <- grepl("_dry$", getCells(lu))
+
+    # Start from the vegetated (set-aside) factor for all classes, then replace
+    # the dry ones with the bare-fallow product. Vectorized: one mask, no loop.
+    out <- lu[, "Set_aside_under20yrs", ]
+    out[dry, , ] <- (lu[, "Long_term_cultivated", ] *
+                     mg[, "full_tillage",          ] *
+                     inp[, "low_input",            ])[dry, , ]
+    getNames(out) <- "fallow"
+
     return(list(x = out,
                 unit = "1",
                 description = paste("Soil carbon stock change factor for fallow land",
-                                    "(IPCC 2019, Table 5.5; bare fallow in dry regions,",
-                                    "vegetated fallow in moist regions)")))
+                                    "(IPCC 2019, Table 5.5; bare fallow under full",
+                                    "tillage and low input in dry regions, vegetated",
+                                    "set-aside in moist regions)")))
 
   } else if (factor == "irrigation") {
 
+    # Irrigation stock change factor from Trost et al. 2013: relative soil carbon
+    # under irrigation vs rainfed, given per aridity class (dry uses semi_arid).
     trost <- readSource("Trost", convert = FALSE)
-    # trost arrives as GLO x aridity class (single data column)
-    vals  <- setNames(vapply(getNames(trost), function(n) as.numeric(trost[1, , n]), numeric(1)),
-                      getNames(trost))
-    dry   <- as.numeric(vals["semi_arid"])
-    moist <- as.numeric(vals["humid"])
+    dry   <- as.numeric(trost[, , "semi_arid"])
+    moist <- as.numeric(trost[, , "humid"])
 
-    w   <- findset("w")
-    kcr <- findset("kcr")
-    out <- new.magpie(findset("climate59_2019"), NULL,
-                      names = as.vector(outer(w, kcr, paste, sep = ".")), fill = 1)
-    dryClasses   <- grep("_dry", getCells(out), value = TRUE)
-    moistClasses <- grep("_moist", getCells(out), value = TRUE)
-    irrigated    <- paste("irrigated", kcr, sep = ".")
-    out[dryClasses, , irrigated]   <- dry
-    out[moistClasses, , irrigated] <- moist
+    # Default factor 1 (no irrigation effect) for every climate x crop x water
+    # mode; only the irrigated crops take the Trost factor, set by the class
+    # moisture regime.
+    w     <- findset("w")
+    kcr   <- findset("kcr")
+    out   <- new.magpie(findset("climate59_2019"), NULL,
+                        names = as.vector(outer(w, kcr, paste, sep = ".")), fill = 1)
+    dryCells  <- grepl("_dry$", getCells(out))
+    irrigated <- paste("irrigated", kcr, sep = ".")
+    out[dryCells, , irrigated]  <- dry
+    out[!dryCells, , irrigated] <- moist
     # higher soil carbon of paddy rice is handled via the land use factor F_LU
     out[, , "irrigated.rice_pro"] <- 1
     return(list(x = out,
