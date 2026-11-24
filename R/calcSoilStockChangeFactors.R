@@ -24,8 +24,8 @@
 
 calcSoilStockChangeFactors <- function(factor = "landuse") {
 
-  # factors are dimensionless; the landuse branch overrides this below
-  unit <- "1"
+  # stock change factors are dimensionless ratios (carbon after / before)
+  unit <- "tC per tC"
 
   if (factor %in% c("tillage", "input")) {
 
@@ -70,25 +70,35 @@ calcSoilStockChangeFactors <- function(factor = "landuse") {
   } else if (factor == "irrigation") {
 
     # Irrigation stock change factor from Trost et al. 2013: relative soil carbon
-    # under irrigation vs rainfed, given per aridity class (dry uses semi_arid).
+    # under irrigation vs rainfed, given per aridity class (arid/semi_arid/humid).
     trost <- readSource("IrrSCF", subtype = "Trost", convert = FALSE)
-    dry   <- as.numeric(trost[, , "semi_arid"])
-    moist <- as.numeric(trost[, , "humid"])
 
-    # Default factor 1 (no irrigation effect) for every climate x crop x water
-    # mode; only the irrigated crops take the Trost factor, set by the class
-    # moisture regime.
-    w     <- findset("w")
-    kcr   <- findset("kcr")
-    out   <- new.magpie(findset("climate59_2019"), NULL,
-                        names = as.vector(outer(w, kcr, paste, sep = ".")), fill = 1)
-    dryCells  <- grepl("_dry$", getCells(out))
-    irrigated <- paste("irrigated", kcr, sep = ".")
-    out[dryCells, , irrigated]  <- dry
-    out[!dryCells, , irrigated] <- moist
+    # Map the Trost aridity classes onto the six IPCC climate classes with
+    # toolAggregate (incidence matrix: rows = Trost classes, columns = climate
+    # classes). Dry classes take the semi-arid factor (arid and semi_arid are
+    # both 1.17), moist classes the humid factor (1.02).
+    climate <- c("temperate_dry", "temperate_moist", "tropical_dry",
+                 "tropical_moist", "boreal_dry", "boreal_moist")
+    rel     <- matrix(0, nrow = 3, ncol = 6,
+                      dimnames = list(c("arid", "semi_arid", "humid"), climate))
+    rel["semi_arid", c("temperate_dry", "tropical_dry", "boreal_dry")]       <- 1
+    rel["humid",     c("temperate_moist", "tropical_moist", "boreal_moist")] <- 1
+    cf      <- toolAggregate(trost, rel = rel, dim = 3)
+
+    # Default factor 1 (no irrigation effect); only the irrigated crops take the
+    # mapped Trost factor. w is not a MAgPIE set, so the two water modes are
+    # hard-coded. The data dimension carries the names in climate.w.kcr order.
+    w   <- c("rainfed", "irrigated")
+    kcr <- findset("kcr")
+    nm  <- do.call(paste, c(expand.grid(climate, w, kcr, stringsAsFactors = FALSE),
+                            list(sep = ".")))
+    out <- new.magpie("GLO", NULL, names = nm, fill = 1)
+    for (clim in climate) {
+      out[, , paste(clim, "irrigated", kcr, sep = ".")] <- as.numeric(cf[, , clim])
+    }
     # higher soil carbon of paddy rice is handled via the land use factor F_LU
-    out[, , "irrigated.rice_pro"] <- 1
-    
+    out[, , paste(climate, "irrigated", "rice_pro", sep = ".")] <- 1
+
     weight      <- NULL           
     description <- paste("Soil carbon stock change factors for irrigation",
                                     "(Trost et al. 2013, Agronomy for Sustainable",
@@ -136,7 +146,6 @@ calcSoilStockChangeFactors <- function(factor = "landuse") {
     weight <- collapseDim(calcOutput("Croparea", aggregate = FALSE, physical = TRUE)[, "y1995", ])
     weight[, , setdiff(kcr, kcrInMix)] <- 1
     weight <- weight + 1e-10
-    unit        <- "tC per tC"
     description <- "Stock change factors for first 30 cm of the soil profile"
 
   } else {
