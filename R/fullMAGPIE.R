@@ -393,13 +393,13 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
   calcOutput("SOMexogenous", years = magYears, round = 4, outputStatistics = stats, file = "f59_som_exogenous.cs3")
   calcOutput("SoilStockChangeFactors", round = 2, outputStatistics = stats, file = "f59_ch5_F_LU_2019reg.cs3")
   calcOutput("SoilStockChangeFactors", factor = "tillage", round = 3, outputStatistics = stats,
-             file = "f59_ch5_F_MG_2019.cs3")
+             file = "f59_ch5_F_MG_2019.csv")
   calcOutput("SoilStockChangeFactors", factor = "input", round = 3, outputStatistics = stats,
-             file = "f59_ch5_F_I_2019.cs3")
+             file = "f59_ch5_F_I_2019.csv")
   calcOutput("SoilStockChangeFactors", factor = "fallow", round = 2, outputStatistics = stats,
-             file = "f59_ch5_F_LU_2019_fallow.cs3")
+             file = "f59_ch5_F_LU_2019_fallow.csv")
   calcOutput("SoilStockChangeFactors", factor = "irrigation", round = 2, outputStatistics = stats,
-             file = "f59_ch5_F_IRR_trost.cs3")
+             file = "f59_trost_F_IRR.cs3")
 
   # 60 bioenergy
   calcOutput("1stBioDem", years = magYears, round = 3, outputStatistics = stats, file = "f60_1stgen_bioenergy_dem.cs3")
