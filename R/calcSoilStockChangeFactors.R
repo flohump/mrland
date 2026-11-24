@@ -3,16 +3,93 @@
 #'
 #' @seealso
 #' [readIPCC()]
+#' [readTrost()]
+#'
+#' @param factor Which stock change factor to calculate: \code{landuse} (F_LU,
+#' default), \code{tillage} (F_MG from IPCC 2019 Table 5.5), \code{input} (F_I
+#' from IPCC 2019 Table 5.5), \code{fallow} (F_LU for fallow land, derived from
+#' the IPCC 2019 land use factors) or \code{irrigation} (Trost et al. 2013).
 #'
 #' @examples
 #' \dontrun{
 #' calcOutput("SoilStockChangeFactors")
+#' calcOutput("SoilStockChangeFactors", factor = "tillage")
+#' calcOutput("SoilStockChangeFactors", factor = "input")
+#' calcOutput("SoilStockChangeFactors", factor = "fallow")
+#' calcOutput("SoilStockChangeFactors", factor = "irrigation")
 #' }
 #'
 #' @return MAgPIE object of yields
 #' @author Kristine Karstens
 
-calcSoilStockChangeFactors <- function() {
+calcSoilStockChangeFactors <- function(factor = "landuse") {
+
+  if (factor %in% c("tillage", "input")) {
+
+    subtype <- if (factor == "tillage") "SCF_MG2019" else "SCF_I2019"
+    raw <- readSource("IPCC", subtype = subtype, convert = FALSE)
+    # raw arrives as GLO x "climateclass.factor", reshape into climate x factor
+    values <- setNames(vapply(getNames(raw), function(n) as.numeric(raw[1, , n]), numeric(1)),
+                       getNames(raw))
+    classes <- sort(unique(sub("\\.[^.]*$", "", getNames(raw))))
+    factors <- sort(unique(sub(".*\\.", "", getNames(raw))))
+    out <- new.magpie(classes, NULL, names = factors, fill = 0)
+    out[, , ] <- matrix(values[outer(classes, factors, paste, sep = ".")],
+                        nrow = length(classes))
+    return(list(x = out,
+                unit = "1",
+                description = if (factor == "tillage")
+                                "Soil carbon stock change factors for tillage (IPCC 2019, Table 5.5)"
+                              else
+                                "Soil carbon stock change factors for input management (IPCC 2019, Table 5.5)"))
+
+  } else if (factor == "fallow") {
+
+    raw <- readSource("IPCC", subtype = "SCF_LU2019", convert = FALSE)
+    # raw arrives as GLO x "climateclass.landusetype"
+    values <- setNames(vapply(getNames(raw), function(n) as.numeric(raw[1, , n]), numeric(1)),
+                       getNames(raw))
+    classes <- sort(unique(sub("\\.[^.]*$", "", getNames(raw))))
+    out <- new.magpie(classes, NULL, names = "fallow", fill = NA)
+    for (cl in classes) {
+      # assume bare fallow in dry regions (long-term cultivated value) and
+      # vegetated fallow in moist regions (set-aside value)
+      lu <- if (grepl("_dry$", cl)) "Long_term_cultivated" else "Set_aside_under20yrs"
+      out[cl, , "fallow"] <- values[paste(cl, lu, sep = ".")]
+    }
+    return(list(x = out,
+                unit = "1",
+                description = paste("Soil carbon stock change factor for fallow land",
+                                    "(IPCC 2019, Table 5.5; bare fallow in dry regions,",
+                                    "vegetated fallow in moist regions)")))
+
+  } else if (factor == "irrigation") {
+
+    trost <- readSource("Trost", convert = FALSE)
+    # trost arrives as GLO x aridity class (single data column)
+    vals  <- setNames(vapply(getNames(trost), function(n) as.numeric(trost[1, , n]), numeric(1)),
+                      getNames(trost))
+    dry   <- as.numeric(vals["semi_arid"])
+    moist <- as.numeric(vals["humid"])
+
+    w   <- findset("w")
+    kcr <- findset("kcr")
+    out <- new.magpie(findset("climate59_2019"), NULL,
+                      names = as.vector(outer(w, kcr, paste, sep = ".")), fill = 1)
+    dryClasses   <- grep("_dry", getCells(out), value = TRUE)
+    moistClasses <- grep("_moist", getCells(out), value = TRUE)
+    irrigated    <- paste("irrigated", kcr, sep = ".")
+    out[dryClasses, , irrigated]   <- dry
+    out[moistClasses, , irrigated] <- moist
+    # higher soil carbon of paddy rice is handled via the land use factor F_LU
+    out[, , "irrigated.rice_pro"] <- 1
+    return(list(x = out,
+                unit = "1",
+                description = paste("Soil carbon stock change factors for irrigation",
+                                    "(Trost et al. 2013, Agronomy for Sustainable",
+                                    "Development 33, 733-749)")))
+
+  }
 
   scfLu2019 <- readSource("IPCC", subtype = "SCF_LU2019", convert = FALSE)
 
