@@ -34,12 +34,12 @@ Returns unprotected land area (Mha) that covers 50 %, 75% and
 }
 \examples{
 \dontrun{
-calcOutput("calcIrrecoverableCarbonLand", aggregate = FALSE)
+calcOutput("IrrecoverableCarbonLand", aggregate = FALSE)
 }
 
 }
 \seealso{
-\code{\link{readNoon2022}}
+\code{\link{readNoon2022}}, \code{\link{toolMagpieLandClasses}}
 }
 \author{
 Patrick v. Jeetze

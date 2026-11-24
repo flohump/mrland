@@ -29,12 +29,12 @@ Returns unprotected land area (Mha) within the Global Safety Net (Dinerstein et 
 }
 \examples{
 \dontrun{
-calcOutput("calcGlobalSafetyNet", aggregate = FALSE)
+calcOutput("GlobalSafetyNet", aggregate = FALSE)
 }
 
 }
 \seealso{
-\code{\link{readDinerstein2020}}
+\code{\link{readDinerstein2020}}, \code{\link{toolMagpieLandClasses}}
 }
 \author{
 Patrick v. Jeetze

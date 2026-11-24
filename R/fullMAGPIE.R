@@ -198,8 +198,6 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
              outputStatistics = stats, file = "f16_domestic_balanceflow.csv")
 
   # 18 residues
-  calcOutput("Multicropping", extend_future = TRUE, years = magYears, round = 4,
-             outputStatistics = stats, file = "f18_multicropping.csv", aggregate = TRUE)
   calcOutput("ResCombustEff", round = 4, outputStatistics = stats, file = "f18_res_combust_eff.cs4", aggregate = FALSE)
 
   # 20 processing
@@ -265,8 +263,6 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
   calcOutput("TradeBilateralBalanceFlow", balanceflow = "total", round = 6, outputStatistics = stats,
              file = "f21_trade_regional_balanceflow.cs3", aggregate = TRUE)
 
-
-
   # 31 Past
   if (grepl("+grasslandRealization", dev)) {
     calcOutput("PastureYield", range_pastr = TRUE, round = 3,
@@ -330,7 +326,7 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
              outputStatistics = stats, file = "f50_nitrogen_balanceflow.cs4")
   calcOutput("NitrogenFixationNdfa", years = magYears, round = 4,
              outputStatistics = stats, file = "f50_ndfa.cs4")
-  calcOutput("NitrogenFixationFreeliving", round = 4,
+  calcOutput("NitrogenFixationFreelivingRate", round = 4,
              outputStatistics = stats, file = "f50_fixation_freeliving.cs4", aggregate = FALSE)
   calcOutput("AtmosphericDepositionRates", round = 4,
              outputStatistics = stats, file = "f50_atmospheric_deposition_rates.cs4")
@@ -423,12 +419,14 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
              outputStatistics = stats, file = "f62_hist_dem_bioplastic.csv")
 
   # 63 biochar
-  calcOutput("BiocharProd", datasource = "REMIND", years = shortYears, round = 3, rev = rev,
-             outputStatistics = stats, biocharsystems = "disagg", unit = "EJ/yr", file = "f63_biochar_prod.cs3")
+  calcOutput("BiocharProd", datasource = "REMIND_and_Dorndorf", years = shortYears, round = 3, rev = rev,
+             outputStatistics = stats, file = "f63_biochar_prod.cs3")
   calcOutput("BiocharAttributes", processCond = "default", round = 2, aggregate = FALSE,
              outputStatistics = stats, file = "f63_biochar_attributes.cs3")
   calcOutput("BiocharEfficiency", processCond = "default", outputType = "default", round = 2,
              outputStatistics = stats, aggregate = FALSE, file = "f63_biochar_efficiency.cs3")
+  calcOutput("BiocharGatePrice", bcSys = "default", outputSys = "bc_sys", round = 2,
+             aggregate = FALSE, outputStatistics = stats, file = "f63_biochar_gate_price.cs3")
 
   # 70 livestock
   calcOutput("FeedBaskets",           years = magYears,  round = 4,
