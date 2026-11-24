@@ -3,7 +3,7 @@
 #'
 #' @seealso
 #' [readIPCC()]
-#' [readTrost()]
+#' [readIrrSCF()]
 #'
 #' @param factor Which stock change factor to calculate: \code{landuse} (F_LU,
 #' default), \code{tillage} (F_MG from IPCC 2019 Table 5.5), \code{input} (F_I
@@ -71,7 +71,7 @@ calcSoilStockChangeFactors <- function(factor = "landuse") {
 
     # Irrigation stock change factor from Trost et al. 2013: relative soil carbon
     # under irrigation vs rainfed, given per aridity class (dry uses semi_arid).
-    trost <- readSource("Trost", convert = FALSE)
+    trost <- readSource("IrrSCF", subtype = "Trost", convert = FALSE)
     dry   <- as.numeric(trost[, , "semi_arid"])
     moist <- as.numeric(trost[, , "humid"])
 
