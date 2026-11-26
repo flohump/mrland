@@ -4,7 +4,13 @@
 \alias{calcSoilStockChangeFactors}
 \title{calcSoilStockChangeFactors}
 \usage{
-calcSoilStockChangeFactors()
+calcSoilStockChangeFactors(factor = "landuse")
+}
+\arguments{
+\item{factor}{Which stock change factor to calculate: \code{landuse} (F_LU,
+default), \code{tillage} (F_MG from IPCC 2019 Table 5.5), \code{input} (F_I
+from IPCC 2019 Table 5.5), \code{fallow} (F_LU for fallow land, derived from
+the IPCC 2019 land use factors) or \code{irrigation} (Trost et al. 2013).}
 }
 \value{
 MAgPIE object of yields
@@ -15,11 +21,16 @@ calculates and merges information on stock change factors
 \examples{
 \dontrun{
 calcOutput("SoilStockChangeFactors")
+calcOutput("SoilStockChangeFactors", factor = "tillage")
+calcOutput("SoilStockChangeFactors", factor = "input")
+calcOutput("SoilStockChangeFactors", factor = "fallow")
+calcOutput("SoilStockChangeFactors", factor = "irrigation")
 }
 
 }
 \seealso{
 [readIPCC()]
+[readIrrSCF()]
 }
 \author{
 Kristine Karstens
