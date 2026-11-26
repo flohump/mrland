@@ -23,7 +23,7 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
   magYears <- findset("time")
   magYearsPast <- c(findset("past"), "y2015")
   # food and material demand also for 2020, so MAgPIE can optionally calibrate to it
-  magYearsPastDemand <- c(magYearsPast, "y2020")
+  magYearsPastDemand <- unique(c(magYearsPast, "y2020"))
   shortYears <- findset("t_all")
 
   # Standard statistics to be calculated when set
