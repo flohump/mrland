@@ -22,6 +22,8 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
 
   magYears <- findset("time")
   magYearsPast <- c(findset("past"), "y2015")
+  # food and material demand also for 2020, so MAgPIE can optionally calibrate to it
+  magYearsPastDemand <- unique(c(magYearsPast, "y2020"))
   shortYears <- findset("t_all")
 
   # Standard statistics to be calculated when set
@@ -131,7 +133,7 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
              outputStatistics = stats, file = "f15_intake_pc_observed_iso.cs3")
   calcOutput("FoodSupplyPast", per_capita = TRUE, products = NULL, product_aggr = FALSE,
              populationweight = "PopulationPast", attributes = "kcal", aggregate = FALSE,
-             years = magYearsPast, round = 1, outputStatistics = stats, file = "f15_kcal_pc_iso.csv")
+             years = magYearsPastDemand, round = 1, outputStatistics = stats, file = "f15_kcal_pc_iso.csv")
   calcOutput("Household_balanceflow",    years = magYears, round = 4,
              outputStatistics = stats, file = "f15_household_balanceflow.cs3")
   calcOutput("NutritionAttributes",      years = magYears, round = 4,
@@ -411,7 +413,7 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
              years = magYears, round = 3, outputStatistics = stats, file = "f60_2ndgenBE_residue_dem.cs3")
 
   # 62 Material
-  calcOutput("DemMaterial", years = magYearsPast, round = 4,
+  calcOutput("DemMaterial", years = magYearsPastDemand, round = 4,
              outputStatistics = stats, file = "f62_dem_material.cs3")
   calcOutput("BioplasticToBiomass", aggregate = FALSE, round = 4,
              outputStatistics = stats, file = "f62_bioplastic2biomass.csv")
