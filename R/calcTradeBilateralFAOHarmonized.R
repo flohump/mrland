@@ -36,7 +36,7 @@ calcTradeBilateralFAOHarmonized <- function(yearly = TRUE) {
   tmfo[, 1995, ] <- tmfo[, 1996, ] <- tmfo[, 1997, ]
   cyears <- intersect(getYears(tm), getYears(tmfo))
 
-  tm <- mbind(tm, tmfo)
+  tm <- mbind(tm[, cyears, ], tmfo[, cyears, ])
   # add fish and ethanol to trade matrix with 0's to be filled by mb
   tm <- add_columns(tm, addnm = c("fish", "ethanol"), dim = 3.1, fill = 0)
 

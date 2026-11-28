@@ -14,13 +14,16 @@
 
 calcPlantedForest <- function() {
   ## Read land area FRA source
-  a <- readSource("FRA2025", "forest_area")
-  plantedShare <- setNames(round(a[, , "plantationForest"], 3) / round(a[, , "plantedForest"], 3), NULL)
+  forestArea <- readSource("FRA2025", "forest_area")
+  ## MAgPIE base year 1995, interpolated from the FRA years 1990 and 2000
+  forestArea <- time_interpolate(forestArea, 1995)
+  plantedShare <- setNames(round(forestArea[, , "plantationForest"], 3) / round(forestArea[, , "plantedForest"], 3),
+                           NULL)
   plantedShare[is.na(plantedShare)] <- 0
-  out <- setYears(plantedShare[, "y2000", ], NULL)
+  out <- setYears(plantedShare, NULL)
 
   ## Weight
-  weight <- setYears(setNames(round(a[, "y2000", "plantedForest"], 3), NULL), NULL)
+  weight <- setYears(setNames(round(forestArea[, , "plantedForest"], 3), NULL), NULL)
 
   return(list(x = out,
               weight = weight,

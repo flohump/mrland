@@ -273,6 +273,13 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
 
   # 32 forestry
   calcOutput("PlantedForest", aggregate = TRUE, round = 3, outputStatistics = stats, file = "f32_plantedforest.cs4")
+  calcOutput("PlantationAgeClass", aggregate = TRUE, round = 4, outputStatistics = stats,
+             file = "f32_planted_ageclass.cs3")
+  calcOutput("PlantationAreaFRA", aggregate = TRUE, round = 3, outputStatistics = stats, file = "f32_plant_area.cs4")
+  calcOutput("PlantationRemovals", aggregate = TRUE, round = 2, outputStatistics = stats,
+             file = "f32_plant_harvest.cs4")
+  calcOutput("PlantedHarvestAge", aggregate = TRUE, round = 0, outputStatistics = stats,
+             file = "f32_planted_rotation_reg.cs3")
 
   # 35 natural vegetation
   calcOutput("ForestLossShare", src = "Curtis", round = 7, outputStatistics = stats,
@@ -280,6 +287,7 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
   calcOutput("ForestLossShare", src = "GFW", round = 7, outputStatistics = stats,
              file = "f35_forest_lost_share_gfw.cs3")
   calcOutput("ForestDisturbances", round = 7, outputStatistics = stats, file = "f35_forest_disturbance_share.cs4")
+  calcOutput("SelectiveLogging", aggregate = TRUE, round = 2, outputStatistics = stats, file = "f35_logging.cs3")
 
   # 36 employment
   calcOutput("WeeklyHoursILO", projections = TRUE, aggregate = TRUE, years = seq(1965, 2150, 5),
@@ -352,10 +360,23 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
   # 52 carbon
   calcOutput("AdjustGrassi2021", aggregate = TRUE,
              outputStatistics = stats, file = "f52_land_carbon_sink_adjust_grassi.cs3")
+  # FRA growing stock per ha by forest category (base year and FRA years to 2020) and the share of the planted
+  # area with a measured series
+  calcOutput("GrowingStockFRA", category = c("nat_reg", "plantation", "other_planted"),
+             years = c(1995, seq(2000, 2020, 5)), aggregate = TRUE, round = 1,
+             outputStatistics = stats, file = "f52_fra_gs.cs3")
+  calcOutput("GrowingStockFRA", category = c("plantation", "other_planted"), indicator = "measured",
+             aggregate = TRUE, round = 2, outputStatistics = stats, file = "f52_fra_measured.cs3")
+  # single-category files of MAgPIE versions that do not read f52_fra_gs.cs3
   calcOutput("GrowingStockPlantations", aggregate = TRUE, round = 0,
              outputStatistics = stats, file = "f52_fra_pla_gs.cs4")
   calcOutput("GrowingStockNRF", aggregate = TRUE, round = 0,
              outputStatistics = stats, file = "f52_fra_nrf_gs.cs4")
+  calcOutput("PlantationNational", indicator = "yield", aggregate = TRUE, round = 1, outputStatistics = stats,
+             file = "f52_plant_yield_reg.cs3")
+  calcOutput("ForestManagedShare", aggregate = TRUE, round = 2, outputStatistics = stats,
+             file = "f52_managed_share.cs4")
+  calcOutput("ForestIncrementRel", aggregate = TRUE, round = 5, outputStatistics = stats, file = "f52_incr_rel.cs3")
 
   # 53 methane
   calcOutput("EFch4Rice", years = magYears, round = 4, outputStatistics = stats, file = "f53_EFch4Rice.cs4")
@@ -451,6 +472,13 @@ fullMAGPIE <- function(rev = numeric_version("0.1"), dev = "") {
              outputStatistics = stats, file = "f73_prod_specific_timber.csv")
   calcOutput("EndUseTimber", aggregate = TRUE, round = 2,
              outputStatistics = stats, file = "f73_regional_timber_demand.csv")
+  calcOutput("SawlogShare", aggregate = TRUE, round = 4,
+             outputStatistics = stats, file = "f73_sawlog_share.csv")
+  calcOutput("WoodfuelNonforestShare", aggregate = TRUE, round = 3, outputStatistics = stats,
+             file = "f73_woodfuel_nonforest.cs4")
+  calcOutput("FellingLoss", aggregate = TRUE, round = 3, outputStatistics = stats, file = "f73_felling_loss.cs3")
+  calcOutput("NaturalForestShare", aggregate = TRUE, round = 3, outputStatistics = stats,
+             file = "f73_natforest_share.cs4")
   calcOutput("ConstructionWoodDemand", aggregate = TRUE, round = 2,
              outputStatistics = stats, file = "f73_construction_wood_demand.cs3")
 
